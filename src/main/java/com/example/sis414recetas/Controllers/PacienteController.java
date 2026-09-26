@@ -1,78 +1,74 @@
 package com.example.sis414recetas.Controllers;
 
 import com.example.sis414recetas.Models.PacienteModel;
+import com.example.sis414recetas.Repositories.PacienteRepository;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping("/paciente")
+@RequestMapping("/api/pacientes")
 public class PacienteController {
 
-    private static List<PacienteModel> pacientes = new ArrayList<>();
+    private final PacienteRepository pacienteRepository;
 
-    static {
-        pacientes.add(new PacienteModel(
-                "Juan Perez",
-                "1234567",
-                25,
-                "Dolor de cabeza"
-        ));
+    public PacienteController(PacienteRepository pacienteRepository) {
+        this.pacienteRepository = pacienteRepository;
     }
 
+    // Obtener todos los pacientes
     @GetMapping
     public List<PacienteModel> obtenerPacientes() {
-        return pacientes;
+        return pacienteRepository.findAll();
     }
 
+    // Obtener un paciente por ID
+    @GetMapping("/{id}")
+    public ResponseEntity<PacienteModel> obtenerPacientePorId(@PathVariable Long id) {
+
+        return pacienteRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    // Crear paciente
     @PostMapping
     public PacienteModel guardarPaciente(@RequestBody PacienteModel paciente) {
-        pacientes.add(paciente);
-        return paciente;
+        return pacienteRepository.save(paciente);
     }
 
-    @PatchMapping
-    public String actualizarParcialPaciente(
-            @RequestBody PacienteModel pacienteConCambios) {
+    // Actualizar paciente
+    @PutMapping("/{id}")
+    public ResponseEntity<PacienteModel> actualizarPaciente(
+            @PathVariable Long id,
+            @RequestBody PacienteModel datosPaciente) {
 
-        for (PacienteModel p : pacientes) {
+        return pacienteRepository.findById(id)
+                .map(paciente -> {
 
-            if (p.getCi().equalsIgnoreCase(pacienteConCambios.getCi())) {
+                    paciente.setNombre(datosPaciente.getNombre());
+                    paciente.setCi(datosPaciente.getCi());
+                    paciente.setEdad(datosPaciente.getEdad());
+                    paciente.setMotivoConsulta(datosPaciente.getMotivoConsulta());
 
-                if (pacienteConCambios.getNombre() != null) {
-                    p.setNombre(pacienteConCambios.getNombre());
-                }
-
-                if (pacienteConCambios.getEdad() != 0) {
-                    p.setEdad(pacienteConCambios.getEdad());
-                }
-
-                if (pacienteConCambios.getMotivoConsulta() != null) {
-                    p.setMotivoConsulta(
-                            pacienteConCambios.getMotivoConsulta()
+                    return ResponseEntity.ok(
+                            pacienteRepository.save(paciente)
                     );
-                }
-
-                return "Paciente actualizado parcialmente con éxito";
-            }
-        }
-
-        return "No se encontró el paciente para actualizar";
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
-    @DeleteMapping
-    public String eliminarPaciente(
-            @RequestBody PacienteModel pacienteABorrar) {
+    // Eliminar paciente
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminarPaciente(@PathVariable Long id) {
 
-        boolean eliminado = pacientes.removeIf(p ->
-                p.getCi().equalsIgnoreCase(pacienteABorrar.getCi())
-        );
-
-        if (eliminado) {
-            return "Paciente eliminado con éxito";
+        if (!pacienteRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
         }
 
-        return "No se encontró el paciente especificado";
+        pacienteRepository.deleteById(id);
+
+        return ResponseEntity.noContent().build();
     }
 }

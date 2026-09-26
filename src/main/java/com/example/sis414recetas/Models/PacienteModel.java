@@ -1,6 +1,16 @@
 package com.example.sis414recetas.Models;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+
+@Entity
 public class PacienteModel {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     private String nombre;
     private String ci;
@@ -10,12 +20,19 @@ public class PacienteModel {
     public PacienteModel() {
     }
 
-    public PacienteModel(String nombre, String ci, int edad,
-                         String motivoConsulta) {
+    public PacienteModel(String nombre, String ci, int edad, String motivoConsulta) {
         this.nombre = nombre;
         this.ci = ci;
         this.edad = edad;
         this.motivoConsulta = motivoConsulta;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getNombre() {
